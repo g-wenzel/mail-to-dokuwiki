@@ -9,6 +9,8 @@
      * @author Kelvin Quee <kelvin@quee.org>
      */
 
+    declare(strict_types=1);
+
     $path_to_doku = '../../';	// Relative path to Dokuwiki root. TODO - Convert into plugin.
     $namespace = 'personal';	// Namespace to create wiki pages in. TODO - Support deeper levels of namespaces.
     $target_mailbox = '{imap.migadu.com:993/imap/ssl}INBOX';
@@ -17,8 +19,6 @@
     $mail_password = 'Gills0-Reward-Carport-Islamist-Glitzy';
 
     require_once __DIR__.'/vendor/autoload.php';	// Path to composer.
-
-    declare(strict_types=1);
 
 	// Check path to Dokuwiki and version is correct. TODO
 	if (file_exists($path_to_doku.'VERSION')) {
@@ -40,8 +40,7 @@
     );
 
     try {
-        $mail_ids = $mailbox->searchMailbox('SUBJECT "[9d8uu]"'); // Previously working
-        //$mail_ids = $mailbox->searchMailbox('SUBJECT "'.$target_mail_subject_prefix.'"'); // Previously working
+        $mail_ids = $mailbox->searchMailbox('SUBJECT "[9d8uu]" UNSEEN'); // Find all mails with matching subject and not read
     } catch (ConnectionException $ex) {
         die('IMAP connection failed: '.$ex->getMessage());
     } catch (Exception $ex) {
@@ -53,8 +52,10 @@
 
         $email = $mailbox->getMail(
             $mail_id, // ID of the email, you want to get
-            false // Do NOT mark emails as seen (optional)
+            true // Mark retrieved emails as read
         );
+
+        echo 'Marking '.count($mail_ids).' emails as read.\n';
 
         echo 'from-name: '.(string) (isset($email->fromName) ? $email->fromName : $email->fromAddress)."\n";
         echo 'from-email: '.(string) $email->fromAddress."\n";
@@ -88,19 +89,19 @@
         
         $pagename = strtolower(preg_replace('/[[:space:]]+/', '-', trim(explode(']',(string) $email->subject)[1]))); //Create wikipage name using multiple operations to make it Dokuwiki-ish.
         $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.$pagename.'.txt'; // Future - Support deeper namespaces
-        echo 'writing to target_page'.$target_page; //Begin writing
+        echo 'writing to target_page'.$target_page.'\n'; //Begin writing
 
         
         if (file_exists($target_page)) {
-        	echo('Error: This wiki page already exists.');
+        	echo('Error: This wiki page already exists.\n');
 		} 
         else {
-        	$fp = fopen($target_page, 'w+') or exit('Error: Cannot open file to create wiki page.');
+        	$fp = fopen($target_page, 'w+') or exit('Error: Cannot open file to create wiki page.\n');
 			echo 'writing to target_page'.$target_page; //Begin writing
-			fwrite($fp, $email->textPlain) or exit('ERROR: Cannot write to configuration file.');
-        	flock($fp, LOCK_UN) or exit('ERROR: Cannot unlock file');
+			fwrite($fp, $email->textPlain) or exit('ERROR: Cannot write to configuration file.\n');
+        	flock($fp, LOCK_UN) or exit('Error: Cannot unlock file.\n');
 			fclose($fp);
-			echo 'Wiki page successfully created, written, and closed.';
+			echo 'Wiki page successfully created, written, and closed.\n';
 		}
 
     }
