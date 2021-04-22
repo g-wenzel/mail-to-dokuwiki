@@ -67,45 +67,27 @@
         echo 'subject: '.(string) $email->subject."\n";
         echo 'message_id: '.(string) $email->messageId."\n";
 
+        //Create wikipage name using multiple operations to make it Dokuwiki-ish.
         $pagename_wip = strtolower(preg_replace('/[[:space:]]+/', '-', trim(implode((array_slice(explode(']',(string) $email->subject), 1)),"]")))); 
         $pagename = sanitize_filename($pagename_wip);
-
-        //Create wikipage name using multiple operations to make it Dokuwiki-ish.
         $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.$pagename.'.txt'; // Future - Support deeper namespaces
 
         $attachments = $email->getAttachments();
-        $wikipage_content = $email->textPlain;
+        $wikipage_content = $email->textPlain; // We take text only from plain text for now. Future - HTML support.
 
         foreach ($attachments as $attachment) {
 
+            // Some string gymnastics to create sane attachments filenames. To be improved.
             $ext = pathinfo($attachment->name)['extension'];
-            
             $target_attachment_filename = time().sanitize_filename(pathinfo($attachment->name)['filename']).".".$ext;;
-            
             $target_attachment_filepath = $path_to_doku.'data/media/'.$namespace.'/'.$target_attachment_filename;
+
             $attachment->setFilePath($target_attachment_filepath);
-            echo '--> Saving '.(string) $target_attachment_filepath."...\n";
             $attachment->saveToDisk(); // Save attachment to disk
 
             // Add attachment Dokuwiki markup to wiki content
             $wikipage_content .= "\n{{ :".$namespace.":".$target_attachment_filename." |}}";
         }
-
-
-        /*if (!empty($email->getAttachments())) {
-            echo \count($email->getAttachments())." attachements\n";
-        }*/
-/*        if ($email->textHtml) {                               // Attempts to get HTML portion of emails first
-            echo "Message HTML:\n".$email->textHtml;
-        } else {
-            echo "Message Plain:\n".$email->textPlain;
-        } */
-        
-        // echo "Message Plain:\n".$email->textPlain;
-        // Future - HTML to Markdown
-        // $email->textHtml
-        // https://github.com/thephpleague/html-to-markdown
-        
         
         //Write to Dokuwiki
         
@@ -113,15 +95,12 @@
         	echo("Error: This wiki page already exists.\n");
 		} 
         else {
-/*        	$fp = fopen($target_page, 'w+') or exit("Error: Cannot open file to create wiki page.\n");
-*/			echo 'writing to target_page'.$target_page; //Begin writing
-/*			fwrite($fp, $email->textPlain) or exit("ERROR: Cannot write to wiki page.\n");
-        	flock($fp, LOCK_UN) or exit("Error: Cannot unlock file.\n");
-			fclose($fp);*/
-            echo "Writing wikipage_content\n".$wikipage_content;
             file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
-			echo "Wiki page successfully created, written, and closed.\n";
 		}
+
+        // TODO
+        // Sometimes Dokuwiki's search does not find the newly created files. To run php bin/indexer.php manually.
+        // Workaround is to email hyperlinks to newly created pages link to the requester.
 
     }
 
