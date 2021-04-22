@@ -11,12 +11,16 @@
 
     declare(strict_types=1);
 
-    $path_to_doku = '../../';	// Relative path to Dokuwiki root. TODO - Convert into plugin.
-    $namespace = 'personal';	// Namespace to create wiki pages in. TODO - Support deeper levels of namespaces.
-    $target_mailbox = '{imap.migadu.com:993/imap/ssl}INBOX';
-    $target_mail_subject_prefix = '[9d8uu]'; // Only mails with subject line beginning with this will be retrieved and created into wiki pages.
-    $mail_username = 'post-to-wiki@quee.org';
-    $mail_password = 'Gills0-Reward-Carport-Islamist-Glitzy';
+    // Load configuration and credentials from .env files
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+
+    $path_to_doku = $_ENV['path_to_doku'];	// Relative path to Dokuwiki root. TODO - Convert into plugin.
+    $namespace = $_ENV['namespace'];	// Namespace to create wiki pages in. TODO - Support deeper levels of namespaces.
+    $target_mailbox = $_ENV['target_mailbox'];
+    $target_mail_subject_prefix = $_ENV['target_mail_subject_prefix']; // Only mails with subject line beginning with this will be retrieved and created into wiki pages.
+    $mail_username = $_ENV['mail_username'];
+    $mail_password = $_ENV['mail_password'];
 
     require_once __DIR__.'/vendor/autoload.php';	// Path to composer.
 
