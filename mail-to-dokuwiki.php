@@ -98,7 +98,7 @@
         else {
             // Write text files (create new page) in Dokuwiki
             file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
-
+            echo "New wiki page for ".$pagename." successfully created.\n";
             // Send email containing direct link to new wiki page using PHPMailer. Your requiresment may differ and as such please debug using - https://github.com/PHPMailer/PHPMailer/wiki/Troubleshooting
 
             try {
