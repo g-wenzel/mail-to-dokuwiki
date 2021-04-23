@@ -36,9 +36,8 @@
 	// Check path to Dokuwiki and version is the latest stable (2020-07-29 "Hogfather").
 	if (file_exists($path_to_doku.'VERSION')) {
   			$print_version = file_get_contents($path_to_doku.'VERSION');
-  			echo $print_version;
             if (str_contains ($print_version, "Hogfather")) {
-                echo ("is tested Dokuwiki version.\n");
+                echo ("Dokuwiki version is as expected. Proceeding...\n");
             } else { 
                 exit('Version of Dokuwiki is not as expected. You may disable this warning and proceed with caution.');}
 		} else {
@@ -72,7 +71,7 @@
 
         //Create wikipage name using multiple operations to make it Dokuwiki-ish.
         $pagename_wip = strtolower(preg_replace('/[[:space:]]+/', '-', trim(implode((array_slice(explode(']',(string) $email->subject), 1)),"]")))); 
-        $pagename = sanitize_filename($pagename_wip);
+        $pagename = rtrim(sanitize_filename($pagename_wip), "-");
         $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.$pagename.'.txt'; 
 
         $attachments = $email->getAttachments();

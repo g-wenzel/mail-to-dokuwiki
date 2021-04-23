@@ -5,11 +5,11 @@ Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching 
 ## Dependencies
 
 ```bash
-    "require": {
-        "php-imap/php-imap": "^4.1",
-        "vlucas/phpdotenv": ">=5.3",
-        "phpmailer/phpmailer": "^6.4"
-    }
+"require": {
+    "php-imap/php-imap": "^4.1",
+    "vlucas/phpdotenv": ">=5.3",
+    "phpmailer/phpmailer": "^6.4"
+}
 ```
 
 Please install composer using these instructions - https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos
@@ -22,8 +22,8 @@ Please ensure you locate `mail-to-dokuwiki.php` in the folder /lib/plugins/mail-
 Depending on your SMTP mail server, you may need to change the SMTP encryption from SSL to TLS -
 
 ```php
-	// $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-	$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+// $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 ```
 
 Please also remember to change the corresponding port number. You may need to switch it from `465` to `587`. See this guide for debugging tips - https://github.com/PHPMailer/PHPMailer/wiki/Troubleshooting
@@ -54,7 +54,7 @@ crontab -e
 and -
 
 ```
-5 * * * * /path-to-php/php /path-to-dokuwiki/lib/plugins/mail-to-dokuwiki/mail-to-dokuwiki.php
+5 * * * * cd /path-to-dokuwiki/lib/plugins/mail-to-dokuwiki/ && /path-to-php/php mail-to-dokuwiki.php
 ```
 
 ## Limitations
@@ -67,4 +67,7 @@ and -
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; version 2 of the License
+
+
+*Kelvin Quee <kelvin@quee.org>*
 
