@@ -13,33 +13,28 @@ Mail to Dokuwiki processes your content according to the format of your subject 
 | Files               | Uploaded to the specified namespace with timestamp appended. | Uploaded to the specified namespace with timestamp appended. |
 | Links to files      | Appended to the end of the page                              | Appended to the end of the page                              |
 
-
-
 ## Dependencies
 
 ```json
+    {
     "require": {
         "php-imap/php-imap": "^4.1",
-				"vlucas/phpdotenv": ">=5.3",
-				"phpmailer/phpmailer": "^6.4",
-				"j0k3r/php-readability": ">=1.2.7",
-				"ryakad/pandoc-php": "~1.0"
+		    "vlucas/phpdotenv": ">=5.3",
+		    "phpmailer/phpmailer": "^6.4",
+    		"j0k3r/php-readability": ">=1.2.7",
+    		"kelvinq/pandoc-php": ">=1.0.4"
     },
 
 	"repositories": [{
         "type": "vcs",
-        "url":  "git@github.com:kelvinq/pandoc-php.git"
-    }]
+        "url": "git@github.com:kelvinq/pandoc-php.git"
+        }]
+}
 ```
 
 Please install composer using these instructions - https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos
 
-Additionally please add my fork of [pandoc-php](https://github.com/ryakad/pandoc-php) to your ./vendor directory -
-
-```bash
-git clone https://github.com/kelvinq/pandoc-php
-```
-
+You will also need [Pandoc](https://pandoc.org/installing.html) and [tidy](http://www.html-tidy.org) (aka html tidy) installed.
 
 ## Configuration
 
@@ -64,9 +59,7 @@ Send the target email address am email with a matching subject prefix and an att
 
 If all goes well, the following will be created -
 
-* A new wiki page located in the designated namespace named the email subject line sans the prefix
-	* Text content of wiki page will be the text component of the email (HTML is not supported)
-	* Files, created from the email attached and prefixed with the current time, will be uploaded and linked as expected 
+* A new wiki page located in the designated namespace named the email subject line or the webpage title sans the prefix
 * A simple email with the direct link to the wiki page will be sent to requesting email address 
 
 If you encounter any permission error, ensure that you have the permission to write to the `/data/pages` and `/data/media` directories.
