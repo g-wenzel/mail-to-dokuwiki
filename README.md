@@ -2,17 +2,43 @@
 
 Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. Only unread emails with a matching prefix (eg [Secret_Word]) will have their text content and attachments created. You will need to specify an IMAP email box for the script to check and an SMTP server to send a email back to you upon successful creation.
 
+Mail to Dokuwiki processes your content according to the format of your subject line -
+
+| Subject line format | *[Secret] Any non-URL line*                                  | *[Secret] Any URL*                                           |
+| ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Example             | [Secret_Word] Fwd: Meeting minutes 01/04/2026                | [Secret_Word] https://www.spacex.com/human-spaceflight/mars/ |
+| Mode                | Convert body of email, text-only, into new Dokuwiki page.    | Archive text-only version of webpage as new Dokuwiki page    |
+| Page title          | Email subject line                                           | Title of webpage                                             |
+| Page body           | Email body (text-only)                                       | Webpage body (text-only)                                     |
+| Files               | Uploaded to the specified namespace with timestamp appended. | Uploaded to the specified namespace with timestamp appended. |
+| Links to files      | Appended to the end of the page                              | Appended to the end of the page                              |
+
+
+
 ## Dependencies
 
-```bash
-"require": {
-    "php-imap/php-imap": "^4.1",
-    "vlucas/phpdotenv": ">=5.3",
-    "phpmailer/phpmailer": "^6.4"
-}
+```json
+    "require": {
+        "php-imap/php-imap": "^4.1",
+				"vlucas/phpdotenv": ">=5.3",
+				"phpmailer/phpmailer": "^6.4",
+				"j0k3r/php-readability": ">=1.2.7",
+				"ryakad/pandoc-php": "~1.0"
+    },
+
+	"repositories": [{
+        "type": "vcs",
+        "url":  "git@github.com:kelvinq/pandoc-php.git"
+    }]
 ```
 
 Please install composer using these instructions - https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos
+
+Additionally please add my fork of [pandoc-php](https://github.com/ryakad/pandoc-php) to your ./vendor directory -
+
+```bash
+git clone https://github.com/kelvinq/pandoc-php
+```
 
 
 ## Configuration
@@ -64,10 +90,7 @@ and -
 
 ## License
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; version 2 of the License
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; version 2 of the License.
 
 
 *Kelvin Quee <kelvin@quee.org>*
-

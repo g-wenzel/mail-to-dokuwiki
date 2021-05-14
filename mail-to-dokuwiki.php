@@ -6,10 +6,10 @@
      * Pulls out email with specified prefix (eg [secret_word]) and post it to your Dokuwiki.
      * Largely based upon example work of Sebastian Krätzig <info@ts3-tools.info> (PHPIMAP) and PHPMailer.
      *
+     * Now supports adding of HTML emails and also capturing URLs specified in subject lines.
+     *
      * As this was supposed to be a Dokuwiki plugin but I have yet to figure out how to make this work, please still include this file within /lib/plugins/post-to-wiki.
      *
-     * TODO
-     * Sometimes Dokuwiki's search does not find the newly created files. You may need to run php bin/indexer.php manually.
      * Supports only first level namespaces only. To support deeper namespaces.
      *
      * @author Kelvin Quee <kelvin@quee.org>
@@ -22,6 +22,9 @@
     use PhpImap\Mailbox;
     use PHPMailer\PHPMailer\PHPMailer;
     use PHPMailer\PHPMailer\SMTP;
+    use Readability\Readability;
+    use Pandoc\Pandoc;
+
     // Load configuration and credentials from .env files
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotenv->load();
@@ -69,13 +72,51 @@
 
         echo "Marking ".count($mail_ids)." matching emails as read.\n";
 
-        //Create wikipage name using multiple operations to make it Dokuwiki-ish.
-        $pagename_wip = strtolower(preg_replace('/[[:space:]]+/', '-', trim(implode((array_slice(explode(']',(string) $email->subject), 1)),"]")))); 
-        $pagename = rtrim(sanitize_filename($pagename_wip), "-");
-        $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.$pagename.'.txt'; 
+        $pagename_wip = trim(substr((string) $email->subject, strlen($target_mail_subject_prefix)));
 
+        if (filter_var(filter_var($pagename_wip, FILTER_SANITIZE_URL), FILTER_VALIDATE_URL)) {
+            $url = filter_var($pagename_wip, FILTER_SANITIZE_URL);
+            $html = file_get_contents($url);
+            $readability = new Readability($html, $url);
+            $result = $readability->init();
+            $pandoc = new Pandoc(null, __DIR__.'/tmp');
+
+            if ($result) {
+                $pagename = rtrim(sanitize_filename($readability->getTitle()->textContent), "-");
+                $wikipage_content = 
+                "====== ".$readability->getTitle()->textContent." ======\n".
+                "===== Personal notes =====\n".
+                $email->textPlain."\n".
+                "===== Webpage =====\n".
+                $pandoc->convert($readability->getContent()->getInnerHTML(), "html", "dokuwiki");
+                echo("Webpage sanitised and added as Dokuwiki page.\n");
+            } else {
+                echo 'Looks like we couldn\'t find the content. :(';
+            }
+        }
+        else {
+            //Else just proceed to add body as text
+            if ($email->textHtml) {
+                $readability = new Readability($email->textHtml);
+                $result = $readability->init();
+                $pandoc = new Pandoc(null, __DIR__.'/tmp');
+                $pagename = rtrim(sanitize_filename($pagename_wip), "-");
+                $wikipage_content = 
+                "====== ".$pagename_wip." ======\n".
+                $pandoc->convert($readability->getContent()->getInnerHTML(), "html", "dokuwiki");
+                echo("HTML email added as Dokuwiki page.\n");     
+            } else {
+                $wikipage_content = $email->textPlain;
+                echo("Text email added as Dokuwiki page.");
+            }
+            
+            
+        }
+
+        //Shared common steps to build Dokuwiki page. To make into discrete functions in the future.
+        
+        $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.$pagename.'.txt'; 
         $attachments = $email->getAttachments();
-        $wikipage_content = $email->textPlain; // We take text only from plain text for now. TODO - HTML support.
 
         foreach ($attachments as $attachment) {
 
@@ -113,7 +154,7 @@
                 $mail->AuthType = 'PLAIN';
 
                 $mail->Subject = $pagename." has been posted to ".$_ENV['your_dokuwiki_url'];
-                $mail->Body = "Your created wiki page at ".$_ENV['your_dokuwiki_url']."/".$namespace."/".$pagename;           
+                $mail->Body = "Your new wiki page is at ".$_ENV['your_dokuwiki_url']."/".$namespace."/".$pagename;           
                 
                 $mail->setFrom($_ENV['mail_username'], 'Post-to-Dokuwiki');
                 $mail->addAddress($email->fromAddress);
@@ -126,4 +167,5 @@
 		}
     }
     $mailbox->disconnect();
-
+    //Now, re-index the wiki
+    `../../../bin/indexer.php -q`;
