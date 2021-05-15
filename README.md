@@ -32,9 +32,14 @@ Mail to Dokuwiki processes your content according to the format of your subject 
 }
 ```
 
-Please install composer using these instructions - https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos
+You will also need [composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos), [Pandoc](https://pandoc.org/installing.html) and [tidy](http://www.html-tidy.org) (aka html tidy) installed. Assuming these are already in your system, installing Mail-to-Dokuwiki should be as simple as -
 
-You will also need [Pandoc](https://pandoc.org/installing.html) and [tidy](http://www.html-tidy.org) (aka html tidy) installed.
+```bash
+cd /path-to-dokuwiki/lib/plugins/
+git clone https://github.com/kelvinq/mail-to-dokuwiki.git
+cd mail-to-dokuwiki
+composer install
+```
 
 ## Configuration
 
