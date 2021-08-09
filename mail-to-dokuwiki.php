@@ -29,6 +29,7 @@
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotenv->load();
 
+    $tmpdir = __DIR__.'/tmp';
     $path_to_doku = $_ENV['path_to_doku'];	// Relative path to Dokuwiki root. TODO - Convert into plugin.
     $namespace = $_ENV['namespace'];	// Namespace to create wiki pages in. First level only.
     $target_mailbox = $_ENV['target_mailbox'];
@@ -48,6 +49,10 @@
 
     function sanitize_filename($target_string) {
         return preg_replace('/[^a-z0-9]+/', '-', strtolower($target_string));
+    }
+
+    function extract_url($target_string) {
+        return substr($target_string, strpos($target_string, "http"));
     }
 
     $mailbox = new Mailbox(
@@ -75,11 +80,16 @@
         $pagename_wip = trim(substr((string) $email->subject, strlen($target_mail_subject_prefix)));
 
         if (filter_var(filter_var($pagename_wip, FILTER_SANITIZE_URL), FILTER_VALIDATE_URL)) {
-            $url = filter_var($pagename_wip, FILTER_SANITIZE_URL);
+            $url = extract_url(filter_var($pagename_wip, FILTER_SANITIZE_URL)); 
             $html = file_get_contents($url);
             $readability = new Readability($html, $url);
             $result = $readability->init();
-            $pandoc = new Pandoc(null, __DIR__.'/tmp');
+            
+            if ( !file_exists($tmpdir) ) {
+                mkdir ($tmpdir, 0744);
+            }
+            
+            $pandoc = new Pandoc(null, $tmpdir);
 
             if ($result) {
                 $pagename = rtrim(sanitize_filename($readability->getTitle()->textContent), "-");
@@ -99,7 +109,10 @@
             if ($email->textHtml) {
                 $readability = new Readability($email->textHtml);
                 $result = $readability->init();
-                $pandoc = new Pandoc(null, __DIR__.'/tmp');
+                if ( !file_exists($tmpdir) ) {
+                    mkdir ($tmpdir, 0744);
+                }
+                $pandoc = new Pandoc(null, $tmpdir);
                 $pagename = rtrim(sanitize_filename($pagename_wip), "-");
                 $wikipage_content = 
                 "====== ".$pagename_wip." ======\n".
