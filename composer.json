@@ -1,8 +1,7 @@
 {
     "require": {
-        "php-imap/php-imap": "^4.1",
+        "php-imap/php-imap": ">=4.1",
 		"vlucas/phpdotenv": ">=5.3",
-		"phpmailer/phpmailer": "^6.4",
 		"j0k3r/php-readability": ">=1.2.7",
 		"kelvinq/pandoc-php": ">=1.0.4"
     },

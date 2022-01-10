@@ -1,7 +1,0 @@
-base    mail-to-dokuwiki
-author  Kelvin Quee
-email   kelvin@quee.org
-date    2021-05-14
-name    Mail to Dokuwiki script
-desc    Create new Dokuwiki pages from emails received
-url     https://github.com/kelvinq/mail-to-dokuwiki
