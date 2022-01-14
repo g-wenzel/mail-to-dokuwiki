@@ -1,13 +1,8 @@
 {
     "require": {
         "php-imap/php-imap": ">=4.1",
-		"vlucas/phpdotenv": ">=5.3",
+        "vlucas/phpdotenv": ">=5.3",
 		"j0k3r/php-readability": ">=1.2.7",
-		"kelvinq/pandoc-php": ">=1.0.4"
-    },
-
-	"repositories": [{
-        "type": "vcs",
-        "url":  "git@github.com:kelvinq/pandoc-php.git"
-        }]
+        "ryakad/pandoc-php": "~1.0"
+    }
 }

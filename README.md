@@ -1,6 +1,6 @@
 # Mail to Dokuwiki
 
-Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. it is a customized variant of https://github.com/kelvinq/mail-to-dokuwiki - mainly with features removed that I do not need. Unread emails will be pulled from an IMAP-Mailbox and a Dokuwiki-page with their text content and attachments will be created. You will need to specify an IMAP email box for the script to check.
+Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. It is a customized variant of https://github.com/kelvinq/mail-to-dokuwiki - mainly with features removed that I do not need. Unread emails will be pulled from an IMAP-Mailbox and a Dokuwiki-page with their text content and attachments will be created. You will need to specify an IMAP email box for the script to check.
 
 Mail to Dokuwiki processes your content according to the format of your subject line -
 
@@ -19,26 +19,30 @@ Mail to Dokuwiki processes your content according to the format of your subject 
     {
     "require": {
         "php-imap/php-imap": ">=4.1",
-		    "vlucas/phpdotenv": ">=5.3",
-    		"j0k3r/php-readability": ">=1.2.7",
-    		"kelvinq/pandoc-php": ">=1.0.4"
-    },
-
-	"repositories": [{
-        "type": "vcs",
-        "url": "git@github.com:kelvinq/pandoc-php.git"
-        }]
+        "vlucas/phpdotenv": ">=5.3",
+        "j0k3r/php-readability": ">=1.2.7",
+        "ryakad/pandoc-php": "~1.0"
+    }
 }
 ```
+
+Currently PHP-IMAP runs on PHP7. Maybe you need to install PHP-IMAP and (optionally) PHP-tidy and enable the extensions.
+```bash
+sudo apt-get install php7.4-imap
+sudo apt-get install php7.4-tidy
+sudo nano /etc/php/7.4/cli/php.ini
+```
+Search for "imap" and "tidy" and uncomment the line.
 
 You will also need [composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos), [Pandoc](https://pandoc.org/installing.html) and [tidy](http://www.html-tidy.org) (aka html tidy) installed. Assuming these are already in your system, installing Mail-to-Dokuwiki should be as simple as -
 
 ```bash
 cd /path-to-dokuwiki/lib/plugins/
-git clone https://github.com/g-wenzel/mail-to-dokuwiki.git
+sudo git clone https://github.com/g-wenzel/mail-to-dokuwiki.git
 cd mail-to-dokuwiki
-composer install
+sudo composer install
 ```
+Depending on permissions in your Dokuwiki-Folder you may or may not need sudo.
 
 ## Configuration
 
