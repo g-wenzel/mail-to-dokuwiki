@@ -88,8 +88,6 @@
                 $wikipage_content = "====== Email -- ".date("d.m.Y")."--".$pagename_wip." ======\n".$email->textPlain;
                 echo("Text email added as Dokuwiki page.");
             }
-            
-            
         }
 
         $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d")."--".$pagename.'.txt'; 
@@ -117,11 +115,9 @@
             }
             // Write text files (create new page) in Dokuwiki
             file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
-            echo "New wiki page for ".$pagename." successfully created.\n";
-            
-
-            
+            echo "New wiki page for ".$pagename." successfully created.\n";    
 		}
+        $mailbox->delete($mail_id);
     }
     $mailbox->disconnect();
     //Now, re-index the wiki
