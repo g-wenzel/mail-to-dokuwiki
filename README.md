@@ -4,14 +4,14 @@ Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching 
 
 Mail to Dokuwiki processes your content according to the format of your subject line -
 
-| Subject line format | *[Secret] Any non-URL line*                                                                             |
-| ------------------- | --------------------------------------------- ------------------------------------------------------------ |
-| Example             | Fwd: Meeting minutes 01/04/2026                 |
-| Mode                | Convert body of email, text-only, into new Dokuwiki page.        |
-| Page title          | Email subject line                                                                |
-| Page body           | Email body (text-only)                                                              |
-| Files               | Uploaded to the specified namespace with timestamp appended.  |
-| Links to files      | Appended to the end of the page                                                    |
+| Subject line format |   Any non-URL line    |
+| ------------------- | --------------------------------------------------------------- |
+| Example             | Fwd: Meeting minutes 01/04/2026      |
+| Mode                | Convert body of email, text-only, into new Dokuwiki page.    |
+| Page title          | Email subject line                                           |
+| Page body           | Email body (text-only)                                       |
+| Files               | Uploaded to the specified namespace with timestamp appended. |
+| Links to files      | Appended to the end of the page       |
 
 ## Dependencies
 
