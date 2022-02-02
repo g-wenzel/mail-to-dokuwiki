@@ -2,7 +2,7 @@
     "require": {
         "php-imap/php-imap": ">=4.1",
         "vlucas/phpdotenv": ">=5.3",
-		"j0k3r/php-readability": ">=1.2.7",
+	"j0k3r/php-readability": ">=1.2.7",
         "ryakad/pandoc-php": "~1.0"
     }
 }
