@@ -1,6 +1,14 @@
 # Mail to Dokuwiki
 
-Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. It is a customized variant of https://github.com/kelvinq/mail-to-dokuwiki - mainly with features removed that I do not need. Unread emails will be pulled from an IMAP-Mailbox and a Dokuwiki-page with their text content and attachments will be created. You will need to specify an IMAP email box for the script to check.
+Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. It is a customized variant of https://github.com/kelvinq/mail-to-dokuwiki.
+The following changes were made:
+* Features removed that I do not need (Confirmation Email, Downloading URLS from subject line) 
+* All emails (not only unread emails) will be pulled from an IMAP-Mailbox and a Dokuwiki-page with their text content and attachments will be created. 
+* The emails are deleted after processing.
+* Only emails from a domain specified in the .env file are processed. Other Emails are deleted.
+* Only attachments of MIME-types specified in path_to_dokuwiki/conf/mime.conf  are allowed.
+
+You will need to specify an IMAP email box for the script to check.
 
 Mail to Dokuwiki processes your content according to the format of your subject line -
 
@@ -26,7 +34,7 @@ Mail to Dokuwiki processes your content according to the format of your subject 
 }
 ```
 
-Currently PHP-IMAP runs on PHP7. Maybe you need to install PHP-IMAP and (optionally) PHP-tidy and enable the extensions.
+Currently Dokuwiki runs on PHP7. Maybe you need to install PHP-IMAP and (optionally) PHP-tidy and enable the extensions.
 ```bash
 sudo apt-get install php7.4-imap
 sudo apt-get install php7.4-tidy
