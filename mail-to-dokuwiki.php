@@ -35,6 +35,8 @@
     $mail_username = $_ENV['mail_username'];
     $mail_password = $_ENV['mail_password'];
     $allowed_domain = $_ENV['allowed_domain'];    // only emails form specific domain are allowed
+    $dokuwiki_unix_user = $_ENV['dokuwiki_unix_user'];
+
     $excluded_mime='application/octet-stream'; // would need to be adapted to exclude several mime types
    
     // Check path to Dokuwiki and version is the latest stable (2020-07-29 "Hogfather").
@@ -50,6 +52,16 @@
     else {
         exit('File VERSION does not exist. Please check Dokuwiki path is correct');
     } 
+
+    //check if namespace already exists
+    if (!file_exists($path_to_doku.'data/pages/'.$namespace)) {
+        mkdir($path_to_doku.'data/pages/'.$namespace, 0755);
+        chown($path_to_doku.'data/pages/'.$namespace,$dokuwiki_unix_user);
+        chgrp($path_to_doku.'data/pages/'.$namespace,$dokuwiki_unix_user);
+        mkdir($path_to_doku.'data/media/'.$namespace, 0755);
+        chown($path_to_doku.'data/media/'.$namespace,$dokuwiki_unix_user);
+        chgrp($path_to_doku.'data/media/'.$namespace,$dokuwiki_unix_user);
+    }
 
     //get permitted mime-types from dokuwiki config file
     $allowed_mime_types = file ($path_to_doku.'conf/mime.conf', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
