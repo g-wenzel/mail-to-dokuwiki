@@ -37,6 +37,20 @@
     $allowed_domain = $_ENV['allowed_domain'];    // only emails form specific domain are allowed
     $excluded_mime='application/octet-stream'; // would need to be adapted to exclude several mime types
    
+    // Check path to Dokuwiki and version is the latest stable (2020-07-29 "Hogfather").
+ 	 if (file_exists($path_to_doku.'VERSION')) {
+        $print_version = file_get_contents($path_to_doku.'VERSION');
+        if (str_contains ($print_version, "Hogfather")) {
+            echo ("Dokuwiki version is as expected. Proceeding...\n");
+        } 
+        else { 
+            exit('Version of Dokuwiki is not as expected. You may disable this warning and proceed with caution.');
+        }
+    } 
+    else {
+        exit('File VERSION does not exist. Please check Dokuwiki path is correct');
+    } 
+
     //get permitted mime-types from dokuwiki config file
     $allowed_mime_types = file ($path_to_doku.'conf/mime.conf', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($allowed_mime_types as $line_num => $line) {
@@ -51,19 +65,6 @@
         $allowed_mime_types[$line_num] = $splitted_line[1]; // get allowed mime-types as strings
         $allowed_mime_types[$line_num] = trim($allowed_mime_types[$line_num],"!"); // cut off ! in relevant lines
     }
-	// Check path to Dokuwiki and version is the latest stable (2020-07-29 "Hogfather").
- 	 if (file_exists($path_to_doku.'VERSION')) {
-        $print_version = file_get_contents($path_to_doku.'VERSION');
-        if (str_contains ($print_version, "Hogfather")) {
-            echo ("Dokuwiki version is as expected. Proceeding...\n");
-        } 
-        else { 
-            exit('Version of Dokuwiki is not as expected. You may disable this warning and proceed with caution.');
-        }
-    } 
-    else {
-        exit('File VERSION does not exist. Please check Dokuwiki path is correct');
-    } 
 
     $mailbox = new Mailbox(
         $target_mailbox,
@@ -105,7 +106,7 @@
                     $wikipage_content = $headline.$converted_textHtml;
                     echo("HTML email added as Dokuwiki page.\n");      
                 } else {
-                    $headline.$email->textPlain;
+                    $wikipage_content = $headline.$email->textPlain;
                     echo("Text email added as Dokuwiki page.");
                 }
             
@@ -126,7 +127,7 @@
                         if (in_array($mime_string,$allowed_mime_types)) {
                             // Some string gymnastics to create sane attachments filenames. To be improved.
                             $ext = pathinfo($attachment->name)['extension'];
-                            $target_attachment_filename = time()."-".sanitize_filename(pathinfo($attachment->name)['filename']).".".$ext;;
+                            $target_attachment_filename = sanitize_filename(pathinfo($attachment->name)['filename']).".".$ext;
                             $target_attachment_filepath = $path_to_doku.'data/media/'.$namespace.'/'.$target_attachment_filename;
 
                             $attachment->setFilePath($target_attachment_filepath);
