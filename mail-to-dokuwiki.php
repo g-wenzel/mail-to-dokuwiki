@@ -97,14 +97,14 @@
                 $pagename = sanitize_filename($subject);
                 $headline = "====== Email -- ".$pagename." -- ".$sender." -- ".date("d.m.Y",strtotime($date))." ======\n";
                 if ($email->textHtml) {
-                    $readability = new Readability($email->textHtml);
-                    $result = $readability->init();
-                    if ( !file_exists($tmpdir) ) {
-                        mkdir ($tmpdir, 0744);
-                    }
-                    $pandoc = new Pandoc(null, $tmpdir);
-                    $wikipage_content = $headline.
-                    $pandoc->convert($readability->getContent()->getInnerHTML(), "html", "dokuwiki");
+                    $readable_textHtml = new Readability($email->textHtml);
+                    $readable_textHtml->init();
+                    $converted_textHtml = (new \Pandoc\Pandoc)
+                        ->from('html')
+                        ->input($readable_textHtml->getContent()->getInnerHTML())
+                        ->to('dokuwiki')
+                        ->run();
+                    $wikipage_content = $headline.$converted_textHtml;
                     echo("HTML email added as Dokuwiki page.\n");      
                 } else {
                     $headline.$email->textPlain;
