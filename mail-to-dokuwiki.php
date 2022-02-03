@@ -18,8 +18,11 @@
 
     use PhpImap\Exceptions\ConnectionException;
     use PhpImap\Mailbox;
-    use Readability\Readability;
     use Pandoc\Pandoc;
+
+    function sanitize_filename($target_string) {
+        return preg_replace('/[^a-z0-9]+/', '-', strtolower($target_string));
+    }
 
     // Load configuration and credentials from .env files
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -32,12 +35,13 @@
     $mail_username = $_ENV['mail_username'];
     $mail_password = $_ENV['mail_password'];
     $allowed_domain = $_ENV['allowed_domain'];    // only emails form specific domain are allowed
+    $excluded_mime='application/octet-stream'; // would need to be adapted to exclude several mime types
    
     //get permitted mime-types from dokuwiki config file
     $allowed_mime_types = file ($path_to_doku.'conf/mime.conf', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($allowed_mime_types as $line_num => $line) {
         
-        if (preg_match("/^#.*$/",$line)) { // if line is a comment, starting with #
+        if ((preg_match("/^#.*$/",$line)) or (strpos($line,$excluded_mime))){ // if line is a comment, starting with # or the excluded mime type is found
             unset($allowed_mime_types[$line_num]); // delete line
         }
     }
@@ -48,7 +52,7 @@
         $allowed_mime_types[$line_num] = trim($allowed_mime_types[$line_num],"!"); // cut off ! in relevant lines
     }
 	// Check path to Dokuwiki and version is the latest stable (2020-07-29 "Hogfather").
- 	if (file_exists($path_to_doku.'VERSION')) {
+ 	 if (file_exists($path_to_doku.'VERSION')) {
         $print_version = file_get_contents($path_to_doku.'VERSION');
         if (str_contains ($print_version, "Hogfather")) {
             echo ("Dokuwiki version is as expected. Proceeding...\n");
@@ -59,11 +63,7 @@
     } 
     else {
         exit('File VERSION does not exist. Please check Dokuwiki path is correct');
-    }
- 
-    function sanitize_filename($target_string) {
-        return preg_replace('/[^a-z0-9]+/', '-', strtolower($target_string));
-    }
+    } 
 
     $mailbox = new Mailbox(
         $target_mailbox,
@@ -97,11 +97,9 @@
                 $pagename = sanitize_filename($subject);
                 $headline = "====== Email -- ".$pagename." -- ".$sender." -- ".date("d.m.Y",strtotime($date))." ======\n";
                 if ($email->textHtml) {
-                    $readable_textHtml = new Readability($email->textHtml);
-                    $readable_textHtml->init();
                     $converted_textHtml = (new \Pandoc\Pandoc)
                         ->from('html')
-                        ->input($readable_textHtml->getContent()->getInnerHTML())
+                        ->input($email->textHtml)
                         ->to('dokuwiki')
                         ->run();
                     $wikipage_content = $headline.$converted_textHtml;
@@ -144,7 +142,8 @@
                 }
             }
         }
-        $mailbox->delete($mail_id);
+        $mailbox->deleteMail($mail_id);
+        $mailbox->expungeDeletedMails();
     }
     $mailbox->disconnect();
     //Now, re-index the wiki
