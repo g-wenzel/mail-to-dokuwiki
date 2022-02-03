@@ -110,40 +110,41 @@
                     $headline.$email->textPlain;
                     echo("Text email added as Dokuwiki page.");
                 }
-            }
+            
         
-            $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
-        
-                
-            if (file_exists($target_page)) {
-                echo("Error: This wiki page already exists.\n");
-            } 
-            else {
-                
-                $attachments = $email->getAttachments();
+                $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
+            
+                    
+                if (file_exists($target_page)) {
+                    echo("Error: This wiki page already exists.\n");
+                } 
+                else {
+                    
+                    $attachments = $email->getAttachments();
 
-                foreach ($attachments as $attachment) {
-                    $mime_string=explode(';',$attachment->mime); //cut off potential additional charset specification
-                    $mime_string=$mime_string[0];
-                    if (in_array($mime_string,$allowed_mime_types)) {
-                        // Some string gymnastics to create sane attachments filenames. To be improved.
-                        $ext = pathinfo($attachment->name)['extension'];
-                        $target_attachment_filename = time()."-".sanitize_filename(pathinfo($attachment->name)['filename']).".".$ext;;
-                        $target_attachment_filepath = $path_to_doku.'data/media/'.$namespace.'/'.$target_attachment_filename;
+                    foreach ($attachments as $attachment) {
+                        $mime_string=explode(';',$attachment->mime); //cut off potential additional charset specification
+                        $mime_string=$mime_string[0];
+                        if (in_array($mime_string,$allowed_mime_types)) {
+                            // Some string gymnastics to create sane attachments filenames. To be improved.
+                            $ext = pathinfo($attachment->name)['extension'];
+                            $target_attachment_filename = time()."-".sanitize_filename(pathinfo($attachment->name)['filename']).".".$ext;;
+                            $target_attachment_filepath = $path_to_doku.'data/media/'.$namespace.'/'.$target_attachment_filename;
 
-                        $attachment->setFilePath($target_attachment_filepath);
-                        $attachment->saveToDisk(); // Save attachment to disk
+                            $attachment->setFilePath($target_attachment_filepath);
+                            $attachment->saveToDisk(); // Save attachment to disk
 
-                        // Add attachment Dokuwiki markup to wiki content
-                        $wikipage_content .= "\n{{ :".$namespace.":".$target_attachment_filename." |}}";
+                            // Add attachment Dokuwiki markup to wiki content
+                            $wikipage_content .= "\n{{ :".$namespace.":".$target_attachment_filename." |}}";
+                        }
                     }
+                    // Write text files (create new page) in Dokuwiki
+                    file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
+                    echo "New wiki page for ".$pagename." successfully created.\n";    
                 }
-                // Write text files (create new page) in Dokuwiki
-                file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
-                echo "New wiki page for ".$pagename." successfully created.\n";    
             }
-            $mailbox->delete($mail_id);
         }
+        $mailbox->delete($mail_id);
     }
     $mailbox->disconnect();
     //Now, re-index the wiki
