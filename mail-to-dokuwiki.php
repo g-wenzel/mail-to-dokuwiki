@@ -160,6 +160,6 @@
             $mailbox->expungeDeletedMails();
         }
         //Now, re-index the wiki
-        $path_to_doku.`/bin/indexer.php -q`;
+         include $path_to_doku.'/bin/indexer.php';
     }
     $mailbox->disconnect();

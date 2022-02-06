@@ -44,7 +44,7 @@ Search for "imap" and uncomment the line.
 
 You will also need [composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos), [Pandoc](https://pandoc.org/installing.html). Assuming these are already in your system, installing Mail-to-Dokuwiki should simple:
 
-Ususally your dokuwiki-folders should not be writable without sudo-permissions. As it is discouraged to run composer as sudo, I suggest to perform the istall in your homedirectory first and then move the files to the dokuwiki plugin-folder.
+Ususally your dokuwiki-folders should not be writable without sudo-permissions. As it is discouraged to run composer as sudo, I suggest to perform the install in your homedirectory first and then move the files to the dokuwiki plugin-folder.
 
 ```bash
 git clone https://github.com/g-wenzel/mail-to-dokuwiki.git
@@ -52,20 +52,28 @@ cd mail-to-dokuwiki
 composer install
 cd ..
 sudo cp -r ./mail-to-dokuwiki/ /var/www/dokuwiki/lib/plugins/
+cd /var/www/dokuwiki/lib/plugins/
+sudo chown -R www-data:www-data mail-to-dokuwiki/
 ```
-In the last line you maybe have to adapt the path to your Dokuwiki.
+You maybe have to adapt the path to your Dokuwiki. In this example the user and group for Dokuwiki is assumed to be "www-data" (on Apache).
 
 ## Configuration
 
 Please ensure you locate `mail-to-dokuwiki.php` in the folder /lib/plugins/mail-to-dokuwiki. An exmaple configuration file is in `.env.example`. Set the necessary parameters and then rename it to `.env`.
 
+Set restricive access for the .env file, as it contains the password.
+
+```bash
+cd /var/www/dokuwiki/lib/plugins/mail-to-dokuwiki/
+sudo chmod o-rwx .env
+```
 
 ## Running
 
-Send the target email address am email with a matching subject prefix and an attachment, and test run with -
+Send the target email address am email with a matching subject prefix and an attachment, and test run with 
 
 ```bash
-/path-to-php/php mail-to-dokuwiki.php
+sudo php mail-to-dokuwiki.php
 ```
 
 If all goes well, the following will be created -
@@ -80,10 +88,10 @@ To get it to run regularly, say every hour on the 5th minute, please setup a cro
 crontab -e
 ```
 
-and -
+and (with the dokuwiki unix-user (here: www-data on Apache) -
 
 ```
-5 * * * * cd /path-to-dokuwiki/lib/plugins/mail-to-dokuwiki/ && /path-to-php/php mail-to-dokuwiki.php
+5 * * * * www-data php /var/www/dokuwiki/lib/plugins/mail-to-dokuwiki/mail-to-dokuwiki.php
 ```
 
 ## Limitations
