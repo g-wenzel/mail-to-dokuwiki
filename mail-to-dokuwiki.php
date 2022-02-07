@@ -14,15 +14,15 @@
      */
 
     declare(strict_types=1);
+    if ('cli' != php_sapi_name()) die();
     require_once __DIR__.'/vendor/autoload.php';
-
     use PhpImap\Exceptions\ConnectionException;
     use PhpImap\Mailbox;
     use Pandoc\Pandoc;
 
-    function sanitize_filename($target_string) {
+/*     function sanitize_filename($target_string) {
         return preg_replace('/[^a-z0-9]+/', '-', strtolower($target_string));
-    }
+    } */
 
     // Load configuration and credentials from .env files
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -37,7 +37,13 @@
     $allowed_domain = $_ENV['allowed_domain'];    // only emails form specific domain are allowed
     $dokuwiki_unix_user = $_ENV['dokuwiki_unix_user'];
 
-    $excluded_mime='application/octet-stream'; // ere and below would need to be adapted to exclude several mime types
+    if (!file_exists($path_to_doku)) die();
+
+    require_once $path_to_doku.'inc/init.php';
+    require_once $path_to_doku.'inc/common.php';
+    require_once $path_to_doku.'inc/mime_parser.php';
+ 
+    $excluded_mime='application/octet-stream'; // here and below would need to be adapted to exclude several mime types
     
     $mailbox = new Mailbox(
         $target_mailbox,
@@ -54,30 +60,11 @@
     }
 
     if (sizeof($mail_ids)>0){ // only run the relevant parts, if there is new email
-
-        // Check path to Dokuwiki and version is the latest stable (2020-07-29 "Hogfather").
-        if (file_exists($path_to_doku.'VERSION')) {
-            $print_version = file_get_contents($path_to_doku.'VERSION');
-            if (str_contains ($print_version, "Hogfather")) {
-                echo ("Dokuwiki version is as expected. Proceeding...\n");
-            } 
-            else { 
-                exit('Version of Dokuwiki is not as expected. You may disable this warning and proceed with caution.');
-            }
+        
+         //check if namespace already exists
+        if (!file_exists($path_to_doku.'data/media/'.$namespace)) {
+            io_createNamespace($namespace, 'media');
         } 
-        else {
-            exit('File VERSION does not exist. Please check Dokuwiki path is correct');
-        } 
-
-        //check if namespace already exists
-        if (!file_exists($path_to_doku.'data/pages/'.$namespace)) {
-            mkdir($path_to_doku.'data/pages/'.$namespace, 0755);
-            chown($path_to_doku.'data/pages/'.$namespace,$dokuwiki_unix_user);
-            chgrp($path_to_doku.'data/pages/'.$namespace,$dokuwiki_unix_user);
-            mkdir($path_to_doku.'data/media/'.$namespace, 0755);
-            chown($path_to_doku.'data/media/'.$namespace,$dokuwiki_unix_user);
-            chgrp($path_to_doku.'data/media/'.$namespace,$dokuwiki_unix_user);
-        }
 
         //get permitted mime-types from dokuwiki config file
         $allowed_mime_types = file ($path_to_doku.'conf/mime.conf', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -108,8 +95,9 @@
                     echo 'URL as email subject is not supported';           
                 }
                 else {
-                    $pagename = sanitize_filename($subject);
-                    $headline = "====== Email -- ".$pagename." -- ".$sender." -- ".date("d.m.Y",strtotime($date))." ======\n";
+                    //$pagename = sanitize_filename($subject);
+                    $pagename = cleanID($subject);
+                    $headline = "====== Email -- ".$pagename." -- ".$sender." -- ".date("d.m.Y",strtotime($date))." ======\n\n";
                     if ($email->textHtml) {
                         $converted_textHtml = (new \Pandoc\Pandoc)
                             ->from('html')
@@ -122,9 +110,9 @@
                         $wikipage_content = $headline.$email->textPlain;
                         echo("Text email added as Dokuwiki page.");
                     }
-                
+                    $wikipage_content = cleanText($wikipage_content);
             
-                    $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
+                    // $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
                 
                         
                     if (file_exists($target_page)) {
@@ -139,19 +127,24 @@
                             $mime_string=$mime_string[0];
                             if (in_array($mime_string,$allowed_mime_types)) {
                                 // Some string gymnastics to create sane attachments filenames. To be improved.
-                                $ext = pathinfo($attachment->name)['extension'];
-                                $target_attachment_filename = sanitize_filename(pathinfo($attachment->name)['filename']).".".$ext;
-                                $target_attachment_filepath = $path_to_doku.'data/media/'.$namespace.'/'.$target_attachment_filename;
+                                //$ext = pathinfo($attachment->name)['extension'];
+                                $attachment_filename = cleanID($attachment->name);
+                               // $target_attachment_filepath = $path_to_doku.'data/media/'.$namespace.'/'.$attachment_filename;
 
-                                $attachment->setFilePath($target_attachment_filepath);
-                                $attachment->saveToDisk(); // Save attachment to disk
-
-                                // Add attachment Dokuwiki markup to wiki content
-                                $wikipage_content .= "\n{{ :".$namespace.":".$target_attachment_filename." |}}";
+                               // $attachment->setFilePath($target_attachment_filepath);
+                                // $attachment->saveToDisk(); // Save attachment to disk
+                                $fid = cleanID(getNS($ID).':'.$fname);
+                                $media_fn   = mediaFN($namespace.':'.$attachment_filename);
+                                if(io_saveFile($media_fn,$attachment->getContents())){
+                                    chmod($fn, $conf['fmode']);
+                                    // Add attachment Dokuwiki markup to wiki content
+                                    $wikipage_content .= "\n\n{{ :".$namespace.":".$attachment_filename." |}}";
+                                }
                             }
                         }
                         // Write text files (create new page) in Dokuwiki
-                        file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
+                        saveWikiText($namespace.':'.date("Y-m-d",strtotime($date))."--".$pagename,$wikipage_content,'submitted by email');
+                        // file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
                         echo "New wiki page for ".$pagename." successfully created.\n";    
                     }
                 }
@@ -160,6 +153,6 @@
             $mailbox->expungeDeletedMails();
         }
         //Now, re-index the wiki
-         include $path_to_doku.'/bin/indexer.php';
+        include $path_to_doku.'/bin/indexer.php';
     }
     $mailbox->disconnect();
