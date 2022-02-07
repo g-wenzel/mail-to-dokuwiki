@@ -1,9 +1,9 @@
 # Mail to Dokuwiki
 
-Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. It is a customized variant of https://github.com/kelvinq/mail-to-dokuwiki.
+Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. It is a variant of https://github.com/kelvinq/mail-to-dokuwiki with some code from https://www.dokuwiki.org/tips:mail2page. The aim is to create an archive of circular emails inside an organization.
 The following changes were made:
-* Features removed that I do not need (Confirmation Email, Downloading URLS from subject line) 
-* Removed php-readability as it did not process html from Emails properly
+* features removed that I do not need (Confirmation Email, Downloading URLS from subject line) 
+* removed php-readability as it did not process html from Emails properly
 * switched to a more recent pandoc-wrapper for PHP
 * All emails (not only unread emails) will be pulled from an IMAP-Mailbox and a Dokuwiki-page with their text content and attachments will be created. 
 * The email subject is prefixed with the date to create a chronologic email-archive.
