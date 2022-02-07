@@ -86,7 +86,7 @@ If all goes well, the following a new wiki page located in the designated namesp
 To get it to run regularly, say every hour on the 5th minute, please setup a cron script -
 
 ```bash
-crontab -e
+sudo nano /etc/crontab
 ```
 
 and (with the dokuwiki unix-user (here: www-data on Apache) -
