@@ -20,10 +20,6 @@
     use PhpImap\Mailbox;
     use Pandoc\Pandoc;
 
-/*     function sanitize_filename($target_string) {
-        return preg_replace('/[^a-z0-9]+/', '-', strtolower($target_string));
-    } */
-
     // Load configuration and credentials from .env files
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotenv->load();
@@ -41,7 +37,6 @@
 
     require_once $path_to_doku.'inc/init.php';
     require_once $path_to_doku.'inc/common.php';
-    require_once $path_to_doku.'inc/mime_parser.php';
  
     $excluded_mime='application/octet-stream'; // here and below would need to be adapted to exclude several mime types
     
@@ -89,13 +84,14 @@
 
             if ($allowed_domain == $email->fromHost) { // accept only emails from particular domain
                 $subject = trim((string) $email->subject);
+                $subject = preg_replace("/^(?:(?:Fwd|Re|FW|WG|AW)\h*:\h*)+/i", '', $subject); // remove Re: or Fwd:
+                $subject = str_replace(':','-',$subject); // replace colons
                 $sender = (string) $email->headers->sender[0]->personal;
                 $date = $email->date;
                 if (filter_var(filter_var($subject, FILTER_SANITIZE_URL), FILTER_VALIDATE_URL)) {
                     echo 'URL as email subject is not supported';           
                 }
                 else {
-                    //$pagename = sanitize_filename($subject);
                     $pagename = cleanID($subject);
                     $headline = "====== Email -- ".$pagename." -- ".$sender." -- ".date("d.m.Y",strtotime($date))." ======\n\n";
                     if ($email->textHtml) {
@@ -112,7 +108,7 @@
                     }
                     $wikipage_content = cleanText($wikipage_content);
             
-                    // $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
+                    $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
                 
                         
                     if (file_exists($target_page)) {
@@ -126,17 +122,11 @@
                             $mime_string=explode(';',$attachment->mime); //cut off potential additional charset specification
                             $mime_string=$mime_string[0];
                             if (in_array($mime_string,$allowed_mime_types)) {
-                                // Some string gymnastics to create sane attachments filenames. To be improved.
-                                //$ext = pathinfo($attachment->name)['extension'];
-                                $attachment_filename = cleanID($attachment->name);
-                               // $target_attachment_filepath = $path_to_doku.'data/media/'.$namespace.'/'.$attachment_filename;
 
-                               // $attachment->setFilePath($target_attachment_filepath);
-                                // $attachment->saveToDisk(); // Save attachment to disk
-                                $fid = cleanID(getNS($ID).':'.$fname);
+                                $attachment_filename = cleanID($attachment->name);
                                 $media_fn   = mediaFN($namespace.':'.$attachment_filename);
                                 if(io_saveFile($media_fn,$attachment->getContents())){
-                                    chmod($fn, $conf['fmode']);
+                                    chmod($media_fn, $conf['fmode']);
                                     // Add attachment Dokuwiki markup to wiki content
                                     $wikipage_content .= "\n\n{{ :".$namespace.":".$attachment_filename." |}}";
                                 }
@@ -144,7 +134,6 @@
                         }
                         // Write text files (create new page) in Dokuwiki
                         saveWikiText($namespace.':'.date("Y-m-d",strtotime($date))."--".$pagename,$wikipage_content,'submitted by email');
-                        // file_put_contents($target_page, $wikipage_content, FILE_APPEND | LOCK_EX);
                         echo "New wiki page for ".$pagename." successfully created.\n";    
                     }
                 }

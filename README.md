@@ -6,9 +6,12 @@ The following changes were made:
 * Removed php-readability as it did not process html from Emails properly
 * switched to a more recent pandoc-wrapper for PHP
 * All emails (not only unread emails) will be pulled from an IMAP-Mailbox and a Dokuwiki-page with their text content and attachments will be created. 
+* The email subject is prefixed with the date to create a chronologic email-archive.
+* The headline shows also date and sender of the email.
 * The emails are deleted after processing.
 * Only emails from a domain specified in the .env file are processed. Other Emails are deleted.
 * Only attachments of MIME-types specified in path_to_dokuwiki/conf/mime.conf  are allowed.
+* Use Dokuwiki's own functions for creating pages and saving media. This results in proper meta-file creation and correct read/write-persmissions.
 
 You will need to specify an IMAP email box for the script to check.
 
@@ -73,14 +76,12 @@ sudo chmod o-rwx .env
 Send the target email address am email with a matching subject prefix and an attachment, and test run with 
 
 ```bash
-sudo php mail-to-dokuwiki.php
+sudo -u www-data php mail-to-dokuwiki.php
 ```
 
-If all goes well, the following will be created -
+If all goes well, the following a new wiki page located in the designated namespace named the email subject line will be created.
 
-* A new wiki page located in the designated namespace named the email subject line or the webpage title
 
-If you encounter any permission error, ensure that you have the permission to write to the `/data/pages` and `/data/media` directories.
 
 To get it to run regularly, say every hour on the 5th minute, please setup a cron script -
 
