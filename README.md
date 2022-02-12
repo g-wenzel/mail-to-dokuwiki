@@ -38,14 +38,10 @@ Mail to Dokuwiki processes your content according to the format of your subject 
 }
 ```
 
-Currently Dokuwiki runs on PHP7. Maybe you need to install PHP-IMAP and (optionally) PHP-tidy and enable the extensions.
+Currently Dokuwiki runs on PHP7. Maybe you need to install PHP-IMAP, [composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos) and [Pandoc](https://pandoc.org/installing.html).
 ```bash
 sudo apt-get install php7.4-imap
-sudo nano /etc/php/7.4/cli/php.ini
 ```
-Search for "imap" and uncomment the line.
-
-You will also need [composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos), [Pandoc](https://pandoc.org/installing.html). Assuming these are already in your system, installing Mail-to-Dokuwiki should simple:
 
 Ususally your dokuwiki-folders should not be writable without sudo-permissions. As it is discouraged to run composer as sudo, I suggest to perform the install in your homedirectory first and then move the files to the dokuwiki plugin-folder.
 
@@ -68,6 +64,7 @@ Set restricive access for the .env file, as it contains the password.
 
 ```bash
 cd /var/www/dokuwiki/lib/plugins/mail-to-dokuwiki/
+sudo chown www-data:www-data .env
 sudo chmod o-rwx .env
 ```
 
