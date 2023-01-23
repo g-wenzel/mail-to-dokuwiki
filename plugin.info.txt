@@ -1,0 +1,6 @@
+base mailtodokuwiki
+author Gregor Wenzel
+email gregor.wenzel@charite.de
+date Mail To Dokuwiki Plugin
+desc Allows to generate new pages by sending emails.
+url https://github.com/g-wenzel/mail-to-dokuwiki
