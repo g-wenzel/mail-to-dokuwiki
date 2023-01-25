@@ -1,70 +1,36 @@
 <?php
-
     /**
      * Post to Dokuwiki by email
-     * Based upon example work of Sebastian Krätzig <info@ts3-tools.info> (PHPIMAP) and Kelvin Quee <kelvin@quee.org>.
-     *
+     * 
      * Supports adding of HTML emails.
-     *
      * Supports only first level namespaces only.
      *
      * @author Gregor Wenzel <gregor.wenzel@charite.de>
      */
 
-    declare(strict_types=1);
-    //if ('cli' != php_sapi_name()) die();
     if(!defined('DOKU_INC')) die();
     if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
-    if(!defined('DOKU_DATA')) define('DOKU_DATA',DOKU_INC.'data/');
 
     require_once(DOKU_PLUGIN.'action.php');
     require_once __DIR__.'/vendor/autoload.php';
+    use PhpImap\Exceptions\ConnectionException;
+    use PhpImap\Mailbox;
+    use Pandoc\Pandoc;
 
-    class action_plugin_clearhistory extends DokuWiki_Action_Plugin {
-        use PhpImap\Exceptions\ConnectionException;
-        use PhpImap\Mailbox;
-        use Pandoc\Pandoc;
-
-        // Load configuration and credentials from .env files
-        /**$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-        $dotenv->load();
-
-        $tmpdir = __DIR__.'/tmp';
-        $path_to_doku = getConf('path_to_doku'];	// Relative path to Dokuwiki root. TODO - Convert into plugin.
-        $namespace = getConf('namespace'];	// Namespace to create wiki pages in. First level only.
-        $target_mailbox = getConf('target_mailbox'];
-        $mail_username = getConf('mail_username'];
-        $mail_password = getConf('mail_password'];
-        $allowed_domain = getConf('allowed_domain'];    // only emails form specific domain are allowed
-        $dokuwiki_unix_user = getConf('dokuwiki_unix_user'];
-
-        if (!file_exists($path_to_doku)) die();
-
-        require_once $path_to_doku.'inc/init.php';
-        require_once $path_to_doku.'inc/common.php';   */
-
-
+    class action_plugin_mailtodokuwiki extends DokuWiki_Action_Plugin {
 
         /**
-         * if true a cleanup process is already running
-         * or done in the last 24h
+         * if true a process is already running
+         * or done in the last 1h
          */
         var $run = false;
 
         /**
-         * Constructor - get some config details and check if a check runs in the last 24h
+         * Constructor - get  config and check if a check runs in the last 1h
          */
-        function action_plugin_mailtodokuwiki() {
+        public function __construct() {
             global $conf;
-
-            $path_to_doku = DOKU_INC;	// Relative path to Dokuwiki root.
-            $namespace = getConf('namespace');	// Namespace to create wiki pages in. First level only.
-            $target_mailbox = getConf('target_mailbox');
-            $mail_username = getConf('mail_username');
-            $mail_password = getConf('mail_password');
-            $allowed_domain = getConf('allowed_domain');    // only emails form specific domain are allowed
-            $dokuwiki_unix_user = getConf('dokuwiki_unix_user');
-
+            $this->loadConfig();
             // check if a runfile exists - if not -> there is no last run
             if (!is_file($conf['cachedir'].'/lastrun')) return;  
 
@@ -85,38 +51,39 @@
         /**
          * Register its handlers with the dokuwiki's event controller
          *
-         * we need hook the indexer to trigger the cleanup
+         * we need hook the indexer to trigger the script
          */
         function register(Doku_Event_Handler $controller) {
             $controller->register_hook('INDEXER_TASKS_RUN', 'BEFORE',  $this, 'get_mail_and_post', array());
         }
 
-        function get_mail_and_post(){
-            $excluded_mime = 'application/octet-stream'; // here and below would need to be adapted to exclude several mime types
+
+        function get_mail_and_post(&$event, $param){
             
-            $mailbox = new Mailbox(
-                $target_mailbox,
-                $mail_username,
-                $mail_password,
-            );
+            $namespace = $this->getConf('namespace');	// Namespace to create wiki pages in. First level only.
+            $target_mailbox = $this->getConf('target_mailbox');
+            $mail_username = $this->getConf('mail_username');
+            $mail_password = conf_decodeString($this->conf['mail_password']);
+            $allowed_domain = $this->getConf('allowed_domain');    // only emails form specific domain are allowed
 
+            $excluded_mime = 'application/octet-stream'; // here and below would need to be adapted to exclude several mime types
+            $mailbox = new Mailbox($target_mailbox, $mail_username, $mail_password);
             try {
-                $mail_ids = $mailbox->searchMailbox(); // Find all mail in in folder from .env
+                $mail_ids = $mailbox->searchMailbox(); // Find all mail in in folder
             } catch (ConnectionException $ex) {
-                die('IMAP connection failed: '.$ex->getMessage());
+                die();
             } catch (Exception $ex) {
-                die('An error occured: '.$ex->getMessage());
+                die();
             }
-
             if (sizeof($mail_ids)>0){ // only run the relevant parts, if there is new email
                 
                 //check if namespace already exists
-                if (!file_exists($path_to_doku.'data/media/'.$namespace)) {
+                if (!file_exists(DOKU_INC.'data/media/'.$namespace)) {
                     io_createNamespace($namespace, 'media');
                 } 
 
                 //get permitted mime-types from dokuwiki config file
-                $allowed_mime_types = file ($path_to_doku.'conf/mime.conf', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                $allowed_mime_types = file (DOKU_INC.'conf/mime.conf', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
                 foreach ($allowed_mime_types as $line_num => $line) {
                     
                     if ((preg_match("/^#.*$/",$line)) or (strpos($line,$excluded_mime))){ // if line is a comment, starting with # or the excluded mime type is found
@@ -154,15 +121,13 @@
                                     ->input($email->textHtml)
                                     ->to('dokuwiki')
                                     ->run();
-                                $wikipage_content = $headline.$converted_textHtml;
-                                echo("HTML email added as Dokuwiki page.\n");      
+                                $wikipage_content = $headline.$converted_textHtml;     
                             } else {
                                 $wikipage_content = $headline.$email->textPlain;
-                                echo("Text email added as Dokuwiki page.");
                             }
                             $wikipage_content = cleanText($wikipage_content);
                     
-                            $target_page = $path_to_doku.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
+                            $target_page = DOKU_INC.'data/pages/'.$namespace.'/'.date("Y-m-d",strtotime($date))."--".$pagename.'.txt'; 
                         
                                 
                             if (file_exists($target_page)) {
@@ -187,8 +152,7 @@
                                     }
                                 }
                                 // Write text files (create new page) in Dokuwiki
-                                saveWikiText($namespace.':'.date("Y-m-d",strtotime($date))."--".$pagename,$wikipage_content,'submitted by email');
-                                echo "New wiki page for ".$pagename." successfully created.\n";    
+                                saveWikiText($namespace.':'.date("Y-m-d",strtotime($date))."--".$pagename,$wikipage_content,'submitted by email');  
                             }
                         }
                     }
@@ -196,9 +160,10 @@
                     $mailbox->expungeDeletedMails();
                 }
                 //Now, re-index the wiki
-                include $path_to_doku.'/bin/indexer.php';
+                include DOKU_INC.'/bin/indexer.php';
             }
             $mailbox->disconnect();
             touch($conf['cachedir'].'/lastrun');
         }
     }
+?>
