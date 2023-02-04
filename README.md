@@ -18,13 +18,26 @@ You will need to specify an IMAP email box for the script to check.
 Mail to Dokuwiki processes your content according to the format of your subject line -
 
 | Subject line format |   Any non-URL line    |
-| ------------------- | --------------------------------------------------------------- |
-| Example             | Fwd: Meeting minutes 01/04/2026      |
+| ------------------- | ------------------------------------------------------- |
+| Example             | Fwd: Meeting 01/04/2026      |
 | Mode                | Convert body of email, text-only, into new Dokuwiki page.    |
 | Page title          | Email subject line                                           |
 | Page body           | Email body (text-only)                                       |
 | Files               | Uploaded to the specified namespace with timestamp appended. |
 | Links to files      | Appended to the end of the page       |
+
+## New feature: Post short news to specific section
+You can specify a starting keyword to turn the email subject into a section on an existing wiki-page instaed of turning the whole email into a new wiki-page. This is intended to post short news on the landing page. These news-sections expire after a number of days specified in the configuration menu.
+
+
+| Subject line format |   Keyword Any non-URLS subject line  |
+| ------------------- | ------------------------------------------------------- |
+| Example             | WCOTW John Doe wrote a great article. This is why his photo is on the landing page for 7 days!     |
+| Mode                | Convert subjcet line of email, text-only, into a section Dokuwiki page.    |
+| Section title       | Specified in configuration menu, e.g. Wiki-contributor of the week                  |
+| Email body           | Ignored                                      |
+| Images               | Included in the newly inserted section, only images are processed, any other attachments are discarded |
+
 
 ## Dependencies
 bundeled in repo
