@@ -1,17 +1,13 @@
 # Mail to Dokuwiki
 
-Mail to Dokuwiki is a PHP script that creates a new Dokuwiki page from matching emails. It is ispired by https://github.com/kelvinq/mail-to-dokuwiki with some code from https://www.dokuwiki.org/tips:mail2page and https://www.dokuwiki.org/plugin:clearhistory. The aim is to create an archive of circular emails inside an organization.
-The following changes were made:
-* features removed that I do not need (Confirmation Email, Downloading URLS from subject line) 
-* removed php-readability as it did not process html from Emails properly
-* switched to a more recent pandoc-wrapper for PHP
-* All emails (not only unread emails) will be pulled from an IMAP-Mailbox and a Dokuwiki-page with their text content and attachments will be created. 
+Mail to Dokuwiki is a Dokuwiki action plugin that creates a new wiki page from matching emails. It is ispired by https://github.com/kelvinq/mail-to-dokuwiki with some code from https://www.dokuwiki.org/tips:mail2page and https://www.dokuwiki.org/plugin:clearhistory. The aim is to create an archive of circular emails inside an organization.
+
+* All emails (not only unread emails) will be pulled from an IMAP-Mailbox and a wiki-page with their text content and attachments will be created. 
 * The email subject is prefixed with the date to create a chronologic email-archive.
 * The headline shows also date and sender of the email.
 * The emails are deleted after processing.
-* Only emails from a domain specified in the .env file are processed. Other Emails are deleted.
-* Only attachments of MIME-types specified in path_to_dokuwiki/conf/mime.conf  are allowed.
-* Use Dokuwiki's own functions for creating pages and saving media. This results in proper meta-file creation and correct read/write-persmissions.
+* Only emails from a domain specified in the config menu are processed. Other Emails are deleted.
+* Only attachments of MIME-types specified in path_to_dokuwiki/conf/mime.conf  are allowed (application/octet-stream is not allowed).
 
 You will need to specify an IMAP email box for the script to check.
 
@@ -39,7 +35,7 @@ You can specify a starting keyword to turn the email subject into a section on a
 | Images               | Included in the newly inserted section, only images are processed, any other attachments are discarded |
 
 
-## Dependencies
+## Dependencies & Install
 bundeled in repo
 ```json
 {
@@ -61,7 +57,3 @@ Configuration can be done via the Config menu on the Admin page.
 ## Limitations
 
 * Supports only first level namespaces.
-
-## License
-
-This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; version 2 of the License.
